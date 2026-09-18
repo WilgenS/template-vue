@@ -1,24 +1,22 @@
 <script setup lang="ts">
-export interface PolicySummaryData {
-  policyNumber: string
-  status: string
-  product: string
-  validity: string
-  currency: string
-  paymentStatus: string
-}
+import type { PolicySummaryData } from '../types/policy'
 
-withDefaults(defineProps<{
-  policyData?: PolicySummaryData
-}>(), {
-  policyData: () => ({
-    policyNumber: 'RCO1-3535431',
-    status: 'NO VIGENTE',
-    product: 'RCO-Responsabilidad Civil',
-    validity: '13-08-2026 (5:22 PM) / 12-08-2027 (24:00 Hrs)',
-    currency: 'US',
-  })
-})
+withDefaults(
+  defineProps<{
+    policyData?: PolicySummaryData | null
+    loading?: boolean
+  }>(),
+  {
+    policyData: () => ({
+      policyNumber: 'RCO1-3535431',
+      status: 'NO VIGENTE',
+      product: 'RCO-Responsabilidad Civil',
+      validity: '13-08-2026 (5:22 PM) / 12-08-2027 (24:00 Hrs)',
+      currency: 'US',
+    }),
+    loading: false
+  }
+)
 </script>
 
 <template>
@@ -34,24 +32,27 @@ withDefaults(defineProps<{
         <div class="flex flex-column gap-1">
           <span class="label-title">NÚMERO DE PÓLIZA</span>
           <h2 class="policy-number font-extrabold m-0 text-slate-800 text-xl md:text-2xl tracking-tight">
-            {{ policyData.policyNumber }}
+            <span v-if="loading" class="opacity-50">Cargando póliza...</span>
+            <span v-else>{{ policyData?.policyNumber || 'N/D' }}</span>
           </h2>
         </div>
       </div>
 
       <div class="right-section flex flex-column sm:align-items-end gap-1">
         <span class="label-title">ESTADO DE PÓLIZA</span>
-        <div class="badge-no-vigente">
+        <div 
+          :class="policyData?.status?.toUpperCase() === 'VIGENTE' ? 'badge-vigente' : 'badge-no-vigente'"
+        >
           <span class="dot"></span>
-          <span>{{ policyData.status }}</span>
+          <span>{{ loading ? 'CARGANDO...' : (policyData?.status || 'N/D') }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Divisor sutil sutil horizontal -->
+    <!-- Divisor sutil horizontal -->
     <div class="divider-line my-3"></div>
 
-    <!-- Fila Inferior: Grid de 4 Atributos Principal -->
+    <!-- Fila Inferior: Grid de Atributos Principal -->
     <div class="policy-grid-4 grid pt-2">
       <!-- 1. PRODUCTO -->
       <div class="col-12 sm:col-6 md:col-3 flex flex-column gap-2 border-slate-100 pr-3">
@@ -60,33 +61,31 @@ withDefaults(defineProps<{
           <span class="label-title">PRODUCTO</span>
         </div>
         <div class="value-text font-bold text-slate-800">
-          {{ policyData.product }}
+          {{ loading ? '---' : (policyData?.product || 'N/D') }}
         </div>
       </div>
 
       <!-- 2. VIGENCIA -->
-      <div class="col-12 sm:col-6 md:col-4 flex flex-column gap-2 border-slate-100 px-3">
+      <div class="col-12 sm:col-6 md:col-5 flex flex-column gap-2 border-slate-100 px-3">
         <div class="flex align-items-center gap-2 text-slate-500">
           <i class="pi pi-calendar text-sm text-slate-400"></i>
           <span class="label-title">VIGENCIA</span>
         </div>
         <div class="value-text font-bold text-slate-800 leading-tight">
-          {{ policyData.validity }}
+          {{ loading ? '---' : (policyData?.validity || 'N/D') }}
         </div>
       </div>
 
       <!-- 3. MONEDA -->
-      <div class="col-12 sm:col-6 md:col-2 flex flex-column gap-2 border-slate-100 px-3">
+      <div class="col-12 sm:col-6 md:col-4 flex flex-column gap-2 border-slate-100 px-3">
         <div class="flex align-items-center gap-2 text-slate-500">
           <span class="text-xs font-black text-slate-400">$</span>
           <span class="label-title">MONEDA</span>
         </div>
         <div class="value-text font-bold text-slate-800">
-          {{ policyData.currency }}
+          {{ loading ? '---' : (policyData?.currency || 'N/D') }}
         </div>
       </div>
-
-    
     </div>
   </div>
 </template>
@@ -141,5 +140,25 @@ withDefaults(defineProps<{
   font-weight: 700;
   color: #1e293b;
   word-break: break-word;
+}
+
+.badge-vigente {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #dcfce7;
+  color: #15803d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #86efac;
+}
+
+.badge-vigente .dot {
+  width: 6px;
+  height: 6px;
+  background-color: #22c55e;
+  border-radius: 50%;
 }
 </style>
