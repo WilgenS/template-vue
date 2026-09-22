@@ -1,5 +1,5 @@
 import { apiFetch, ApiError } from './api'
-import type { PolicySummaryData, Interventor, Coverage, PolicyDetailsResponse, RenewalResponse } from '../types/policy'
+import type { Interventor, Coverage, PolicyDetailsResponse, RenewalResponse, BondData } from '../types/policy'
 
 // Datos predeterminados de respaldo (Fallback si el backend local aún no está activo)
 const MOCK_POLICY_RESPONSE: PolicyDetailsResponse = {
@@ -32,7 +32,19 @@ const MOCK_POLICY_RESPONSE: PolicyDetailsResponse = {
     { id: 2, name: 'Lesiones Corporales a Terceros', limit: 'US$ 15,000.00', deductible: 'US$ 0.00', status: 'Incluido' },
     { id: 3, name: 'Gastos Médicos a Ocupantes', limit: 'US$ 2,500.00', deductible: 'US$ 50.00', status: 'Incluido' },
     { id: 4, name: 'Asistencia Legal y Fianza', limit: 'US$ 5,000.00', deductible: 'US$ 0.00', status: 'Incluido' }
-  ]
+  ],
+  bond: {
+    bondType: 'Plan',
+    bondTypeDescription: 'Mantenimiento de oferta, anticipo, cumplimiento, vicios ocultos…',
+    amount: '—',
+    currency: '—',
+    period: '—',
+    validity: 'Desde — Hasta',
+    bondedParty: '—',
+    beneficiary: '—',
+    guaranteedContract: 'Datos particulares en sistema: @produccion(DA1PARFI:B03.codasegurado-datos_fianza_asegurados-NEIV)',
+    bondPurpose: 'Incluir primer párrafo de las condiciones particulares de la fianza (PER por cada plan)'
+  }
 }
 
 export const policyService = {
@@ -75,6 +87,20 @@ export const policyService = {
     } catch (error: any) {
       if (error instanceof ApiError && (error.status === 0 || error.status === 404)) {
         return MOCK_POLICY_RESPONSE.coverages
+      }
+      throw error
+    }
+  },
+
+  /**
+   * Obtiene los datos de la fianza asociada a una póliza
+   */
+  async getBondDetails(policyNumber: string = 'RCO1-3535431'): Promise<BondData | undefined> {
+    try {
+      return await apiFetch<BondData>(`/policies/${policyNumber}/bond`)
+    } catch (error: unknown) {
+      if (error instanceof ApiError && (error.status === 0 || error.status === 404)) {
+        return MOCK_POLICY_RESPONSE.bond
       }
       throw error
     }

@@ -5,6 +5,7 @@ import Button from 'primevue/button'
 import AppHeader from './components/AppHeader.vue'
 import PolicySummaryCard from './components/PolicySummaryCard.vue'
 import PolicyInterventorsCard from './components/PolicyInterventorsCard.vue'
+import PolicyBondCard from './components/PolicyBondCard.vue'
 import PolicyDetailsModal from './components/PolicyDetailsModal.vue'
 import { usePolicyStore } from './stores/policyStore'
 
@@ -77,7 +78,7 @@ onMounted(() => {
       />
 
       <!-- 3. Sección Inferior: Tarjetas de Intervinientes -->
-      <div class="grid policy-bottom-grid">
+      <div class="grid policy-bottom-grid mb-4">
         <div class="col-12 md:col-6 p-2">
           <PolicyInterventorsCard 
             :interventors="policyStore.interventors" 
@@ -85,6 +86,12 @@ onMounted(() => {
           />
         </div>
       </div>
+
+      <!-- 4. Sección Datos de la Fianza -->
+      <PolicyBondCard 
+        :bond-data="policyStore.bond" 
+        :loading="policyStore.loading" 
+      />
     </div>
 
     <!-- Modal de Detalles y Renovación de PrimeVue -->

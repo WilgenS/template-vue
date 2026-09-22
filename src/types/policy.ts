@@ -29,10 +29,24 @@ export interface Coverage {
   status: 'Incluido' | 'Opcional' | 'Excluido' | string
 }
 
+export interface BondData {
+  bondType: string
+  bondTypeDescription?: string
+  amount?: string
+  currency?: string
+  period?: string
+  validity?: string
+  bondedParty?: string
+  beneficiary?: string
+  guaranteedContract?: string
+  bondPurpose?: string
+}
+
 export interface PolicyDetailsResponse {
   policy: PolicySummaryData
   interventors: Interventor[]
   coverages: Coverage[]
+  bond?: BondData
 }
 
 export interface RenewalRequest {

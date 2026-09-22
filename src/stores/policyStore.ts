@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { policyService } from '../services/policyService'
-import type { PolicySummaryData, Interventor, Coverage } from '../types/policy'
+import type { PolicySummaryData, Interventor, Coverage, BondData } from '../types/policy'
 
 export const usePolicyStore = defineStore('policy', () => {
   const policy = ref<PolicySummaryData | null>(null)
+  const bond = ref<BondData | null>(null)
   const interventors = ref<Interventor[]>([])
   const coverages = ref<Coverage[]>([])
   const loading = ref<boolean>(false)
@@ -24,6 +25,7 @@ export const usePolicyStore = defineStore('policy', () => {
       policy.value = data.policy
       interventors.value = data.interventors
       coverages.value = data.coverages
+      bond.value = data.bond || null
       isBackendConnected.value = true
     } catch (err: any) {
       error.value = err.message || 'Error al cargar los datos del expediente'
@@ -48,6 +50,7 @@ export const usePolicyStore = defineStore('policy', () => {
 
   return {
     policy,
+    bond,
     interventors,
     coverages,
     loading,
