@@ -32,7 +32,9 @@ const emit = defineEmits(['open-details', 'open-renew'])
       </p>
     </div>
 
-   
+    <div class="header-right flex align-items-center gap-2 no-print">
+      <slot name="actions" />
+    </div>
   </header>
 </template>
 

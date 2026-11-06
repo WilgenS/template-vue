@@ -30,12 +30,15 @@ export interface Coverage {
 }
 
 export interface BondData {
+  bondNumber?: string
   bondType: string
   bondTypeDescription?: string
   amount?: string
   currency?: string
   period?: string
   validity?: string
+  validFrom?: string
+  validTo?: string
   bondedParty?: string
   beneficiary?: string
   guaranteedContract?: string

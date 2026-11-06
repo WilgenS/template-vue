@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Toast from 'primevue/toast'
 import Button from 'primevue/button'
 import AppHeader from './components/AppHeader.vue'
@@ -8,16 +8,32 @@ import PolicyInterventorsCard from './components/PolicyInterventorsCard.vue'
 import PolicyBondCard from './components/PolicyBondCard.vue'
 import PolicyDetailsModal from './components/PolicyDetailsModal.vue'
 import { usePolicyStore } from './stores/policyStore'
+import { downloadBondConfirmationPdf } from './utils/bondPdfGenerator'
 
 const policyStore = usePolicyStore()
 const isModalVisible = ref(false)
+const isDownloadingPdf = ref(false)
+
+const hasData = computed(() => {
+  return !policyStore.loading && Boolean(policyStore.policy || policyStore.bond)
+})
 
 const handleOpenDetails = () => {
   isModalVisible.value = true
 }
 
-const handleReloadData = () => {
-  policyStore.fetchPolicyDetails()
+const handleDownloadPdf = async () => {
+  if (!hasData.value) return
+  isDownloadingPdf.value = true
+  try {
+    await downloadBondConfirmationPdf({
+      policy: policyStore.policy,
+      bond: policyStore.bond,
+      interventors: policyStore.interventors
+    })
+  } finally {
+    isDownloadingPdf.value = false
+  }
 }
 
 onMounted(() => {
@@ -46,30 +62,22 @@ onMounted(() => {
     
     <!-- Contenedor Principal Centrado con Max-Width -->
     <div class="main-container mx-auto">
-      <!-- Banner de Estado de API -->
-      <div 
-        v-if="policyStore.error" 
-        class="bg-amber-50 border-1 border-amber-300 border-round-xl p-3 mb-4 flex flex-column sm:flex-row align-items-start sm:align-items-center justify-content-between gap-3 text-amber-900"
-      >
-        <div class="flex align-items-center gap-2 text-sm">
-          <i class="pi pi-exclamation-circle text-amber-600 text-lg"></i>
-          <span><strong>Aviso API:</strong> {{ policyStore.error }}</span>
-        </div>
-        <Button 
-          label="Reintentar Conexión API" 
-          icon="pi pi-refresh" 
-          severity="warn" 
-          size="small" 
-          :loading="policyStore.loading" 
-          @click="handleReloadData" 
-        />
-      </div>
-
-      <!-- 1. Encabezado de Expediente -->
+      <!-- 1. Encabezado de Expediente y Botón Descargar PDF -->
       <AppHeader 
         @open-details="handleOpenDetails"
         @open-renew="handleOpenDetails" 
-      />
+      >
+        <template #actions>
+          <Button 
+            v-if="hasData"
+            label="Descargar PDF" 
+            icon="pi pi-file-pdf" 
+            class="download-pdf-btn"
+            :loading="isDownloadingPdf" 
+            @click="handleDownloadPdf" 
+          />
+        </template>
+      </AppHeader>
 
       <!-- 2. Tarjeta Resumen Superior de Póliza -->
       <PolicySummaryCard 
@@ -112,6 +120,21 @@ onMounted(() => {
 .policy-bottom-grid {
   margin-left: -0.5rem;
   margin-right: -0.5rem;
+}
+
+.download-pdf-btn {
+  border-radius: 12px;
+  background-color: #2563eb;
+  border-color: #2563eb;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.65rem 1.15rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.download-pdf-btn:hover {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
 }
 
 @media print {
