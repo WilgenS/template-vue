@@ -7,16 +7,21 @@ import PolicySummaryCard from './components/PolicySummaryCard.vue'
 import PolicyDetailsModal from './components/PolicyDetailsModal.vue'
 import { usePolicyStore } from './stores/policyStore'
 import PolicyBondCard from './components/PolicyBondCard.vue'
-import { downloadBondConfirmationPdf } from './utils/bondPdfGenerator.vue'
+
+// 1. Importar el archivo como un componente de Vue (Asegúrate de que la ruta sea correcta)
+import BondPdfGenerator from './utils/bondPdfGenerator.vue'
 
 const policyStore = usePolicyStore()
 const isModalVisible = ref(false)
 const isDownloadingPdf = ref(false)
 
+// 2. Crear una referencia para acceder al componente del PDF
+const pdfGeneratorRef = ref<InstanceType<typeof BondPdfGenerator> | null>(null)
+
 const hasData = computed(() => {
   return !policyStore.loading && Boolean(policyStore.policy || policyStore.bond)
 })
-// Guardamos el código en una referencia por si se necesita reintentar la conexión
+
 const policyCode = ref<string | undefined>(undefined)
 
 const handleOpenDetails = () => {
@@ -27,25 +32,19 @@ const handleDownloadPdf = async () => {
   if (!hasData.value) return
   isDownloadingPdf.value = true
   try {
-    await downloadBondConfirmationPdf({
-      policy: policyStore.policy,
-      bond: policyStore.bond,
-      interventors: policyStore.interventors
-    })
+    // 3. Llamar a la función expuesta por el componente Vue
+    await pdfGeneratorRef.value?.generatePdf()
   } finally {
     isDownloadingPdf.value = false
   }
 }
 
 onMounted(() => {
-  // 1. Obtener el parámetro 'codigo' de la URL de forma nativa
   const urlParams = new URLSearchParams(window.location.search)
   policyCode.value = urlParams.get('codigo') ?? '';
 
-  // 2. Cargar expedientes desde la API pasando el código obtenido
   policyStore.fetchPolicyDetails(policyCode.value)
 
-  // Remover banner de licencia PrimeUI si se inserta en el DOM
   const removeLicenseBanner = () => {
     const el = document.getElementById('p-license-host')
     if (el) el.remove()
@@ -65,10 +64,8 @@ onMounted(() => {
   <div class="app-wrapper min-h-screen py-4 md:py-6 px-3 sm:px-5 lg:px-8">
     <Toast position="top-right" />
     
-    <!-- Contenedor Principal Centrado con Max-Width -->
     <div class="main-container mx-auto">
    
-   <!-- 1. Encabezado de Expediente y Botón Descargar PDF -->
       <AppHeader 
         @open-details="handleOpenDetails"
         @open-renew="handleOpenDetails" 
@@ -84,22 +81,27 @@ onMounted(() => {
           />
         </template>
       </AppHeader>
-      <!-- 2. Tarjeta Resumen Superior de Póliza -->
+
       <PolicySummaryCard 
         :policy-data="policyStore.policy" 
         :loading="policyStore.loading" 
       />
 
-
-      <!-- 4. Sección Datos de la Fianza -->
       <PolicyBondCard 
         :bond-data="policyStore.bond" 
         :loading="policyStore.loading" 
       />
     </div>
 
-    <!-- Modal de Detalles y Renovación de PrimeVue -->
     <PolicyDetailsModal v-model:visible="isModalVisible" />
+
+    <!-- 4. Renderizar el componente oculto del PDF al final de tu vista principal y pasarle los props -->
+    <BondPdfGenerator 
+      ref="pdfGeneratorRef" 
+      :policy="policyStore.policy"
+      :bond="policyStore.bond"
+      :interventors="policyStore.interventors"
+    />
   </div>
 </template>
 
