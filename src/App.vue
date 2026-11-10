@@ -4,11 +4,10 @@ import Toast from 'primevue/toast'
 import Button from 'primevue/button'
 import AppHeader from './components/AppHeader.vue'
 import PolicySummaryCard from './components/PolicySummaryCard.vue'
-import PolicyInterventorsCard from './components/PolicyInterventorsCard.vue'
-import PolicyBondCard from './components/PolicyBondCard.vue'
 import PolicyDetailsModal from './components/PolicyDetailsModal.vue'
 import { usePolicyStore } from './stores/policyStore'
-import { downloadBondConfirmationPdf } from './utils/bondPdfGenerator'
+import PolicyBondCard from './components/PolicyBondCard.vue'
+import { downloadBondConfirmationPdf } from './utils/bondPdfGenerator.vue'
 
 const policyStore = usePolicyStore()
 const isModalVisible = ref(false)
@@ -17,6 +16,8 @@ const isDownloadingPdf = ref(false)
 const hasData = computed(() => {
   return !policyStore.loading && Boolean(policyStore.policy || policyStore.bond)
 })
+// Guardamos el código en una referencia por si se necesita reintentar la conexión
+const policyCode = ref<string | undefined>(undefined)
 
 const handleOpenDetails = () => {
   isModalVisible.value = true
@@ -37,8 +38,12 @@ const handleDownloadPdf = async () => {
 }
 
 onMounted(() => {
-  // Cargar expedientes desde la API al montar el componente
-  policyStore.fetchPolicyDetails()
+  // 1. Obtener el parámetro 'codigo' de la URL de forma nativa
+  const urlParams = new URLSearchParams(window.location.search)
+  policyCode.value = urlParams.get('codigo') ?? '';
+
+  // 2. Cargar expedientes desde la API pasando el código obtenido
+  policyStore.fetchPolicyDetails(policyCode.value)
 
   // Remover banner de licencia PrimeUI si se inserta en el DOM
   const removeLicenseBanner = () => {
@@ -62,7 +67,8 @@ onMounted(() => {
     
     <!-- Contenedor Principal Centrado con Max-Width -->
     <div class="main-container mx-auto">
-      <!-- 1. Encabezado de Expediente y Botón Descargar PDF -->
+   
+   <!-- 1. Encabezado de Expediente y Botón Descargar PDF -->
       <AppHeader 
         @open-details="handleOpenDetails"
         @open-renew="handleOpenDetails" 
@@ -78,22 +84,12 @@ onMounted(() => {
           />
         </template>
       </AppHeader>
-
       <!-- 2. Tarjeta Resumen Superior de Póliza -->
       <PolicySummaryCard 
         :policy-data="policyStore.policy" 
         :loading="policyStore.loading" 
       />
 
-      <!-- 3. Sección Inferior: Tarjetas de Intervinientes -->
-      <div class="grid policy-bottom-grid mb-4">
-        <div class="col-12 md:col-6 p-2">
-          <PolicyInterventorsCard 
-            :interventors="policyStore.interventors" 
-            :loading="policyStore.loading" 
-          />
-        </div>
-      </div>
 
       <!-- 4. Sección Datos de la Fianza -->
       <PolicyBondCard 
